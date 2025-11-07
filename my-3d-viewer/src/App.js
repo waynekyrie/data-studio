@@ -28,8 +28,8 @@ export default function AssetViewer() {
     const selected = shuffled.slice(0, Math.min(sampleSize, allFiles.length));
     return selected.map(file => ({
       category: file.category,
-      decription: file.category,
-      path: `${serverUrl}/${file.filename}`
+      path: `${serverUrl}/${file.filename[0]}`,
+      description: file.filename[1]
     }));
   };
 
@@ -59,7 +59,7 @@ export default function AssetViewer() {
           
           return filenames.map(filename => ({
             category,
-            filename
+            filename,
           }));
         });
           console.log("All files:", allFiles);
@@ -397,8 +397,8 @@ export default function AssetViewer() {
                       : 'bg-gray-700 hover:bg-gray-600'
                   }`}
                 >
-                  <div className="text-xs opacity-75 mt-1 truncate">{asset.category}</div>
-                  <div className="text-xs opacity-75 mt-1 truncate">{asset.path}</div>
+                  <div className="text-l font-bold  opacity-90 mt-1">{asset.description}</div>
+                  {/* <div className="text-xs opacity-75 mt-1 truncate">{asset.path}</div> */}
                 </button>
               ))}
             </div>
