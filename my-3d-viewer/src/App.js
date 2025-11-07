@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
-import { Camera, Grid3x3, ZoomIn, LogOut, RefreshCw } from 'lucide-react';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { Camera, Grid3x3, ZoomIn, LogOut, RefreshCw, Server } from 'lucide-react';
 
 export default function AssetViewer() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
+  const [serverUrl, setServerUrl] = useState('http://localhost:8000');
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [assets, setAssets] = useState([]);
   const [allAssetFiles, setAllAssetFiles] = useState([]);
@@ -25,46 +26,65 @@ export default function AssetViewer() {
   const sampleAssets = (allFiles, sampleSize) => {
     const shuffled = [...allFiles].sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, Math.min(sampleSize, allFiles.length));
-    return selected.map(filename => ({
-      name: filename.replace('.obj', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-      path: `${filename}`
+    return selected.map(file => ({
+      category: file.category,
+      decription: file.category,
+      path: `${serverUrl}/${file.filename}`
     }));
   };
 
-  // Load the file list from filelist.txt
-  useEffect(() => {
-    const loadFileList = async () => {
-      setLoadingList(true);
-      try {
-        const response = await fetch('/assets/filelist.txt');
-        if (!response.ok) {
-          throw new Error('Could not load filelist.txt');
+  // Load the file list from remote server
+    useEffect(() => {
+      if (!isLoggedIn) return;
+  
+      const loadFileList = async () => {
+        setLoadingList(true);
+        try {
+          const response = await fetch(`${serverUrl}/data/dataset.json`);
+          console.log('Fetching dataset.json from', `${serverUrl}/data/dataset.json`);
+          if (!response.ok) {
+            throw new Error('Could not load dataset.json from server');
+          }
+          const data = await response.json();
+          console.log('Loaded file list:', data);
+          
+          if (!data || Object.keys(data).length === 0) {
+          throw new Error('dataset.json is empty or invalid');
         }
-        const text = await response.text();
-        const files = text
-          .split('\n')
-          .map(line => line.trim())
-          .filter(line => line && line.endsWith('.obj'));
-        
-        setAllAssetFiles(files);
-        setLoadingList(false);
-      } catch (err) {
-        console.error('Error loading file list:', err);
-        setError('Failed to load file list. Make sure public/assets/filelist.txt exists.');
-        setLoadingList(false);
-      }
-    };
+  
+        // ✅ Flatten the structure into a single array of { category, filename }
+        const allFiles = Object.entries(data).flatMap(([category, filenames]) => {
+          // Make sure filenames is an array
+          if (!Array.isArray(filenames)) return [];
+          
+          return filenames.map(filename => ({
+            category,
+            filename
+          }));
+        });
+          console.log("All files:", allFiles);
+          
+          setAllAssetFiles(allFiles);
+          console.log("Fetched: ", allAssetFiles);
+          setLoadingList(false);
+        } catch (err) {
+          console.error('Error loading file list:', err);
+          setError(`Failed to load file list from ${serverUrl}/data/dataset.json. Make sure server is running and dataset.json exists.`);
+          setLoadingList(false);
+        }
+      };
+  
+      loadFileList();
+      
+    }, [isLoggedIn, serverUrl]);
 
-    loadFileList();
-  }, []);
-
-  // Sample assets when user logs in
+  // Sample assets when file list is loaded
   useEffect(() => {
-    if (isLoggedIn && allAssetFiles.length > 0 && assets.length === 0) {
+    if (allAssetFiles.length > 0 && assets.length === 0) {
       const sampledAssets = sampleAssets(allAssetFiles, SAMPLE_SIZE);
       setAssets(sampledAssets);
     }
-  }, [isLoggedIn, allAssetFiles, assets.length]);
+  }, [allAssetFiles]);
 
   // Shuffle button handler
   const handleShuffle = () => {
@@ -114,39 +134,36 @@ export default function AssetViewer() {
     scene.add(directionalLight2);
 
     // Grid helper
-    const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
-    scene.add(gridHelper);
+    // const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
+    // scene.add(gridHelper);
 
-    // Load OBJ file
-    const loader = new OBJLoader();
+    // Load GLB file
+    const loader = new GLTFLoader();
     let loadedObject = null;
+    let pivot = null;
 
     loader.load(
       selectedAsset.path,
-      (object) => {
-        // Center and scale the object
+      (gltf) => {
+        const object = gltf.scene;
+        
+        // Calculate bounding box and center
         const box = new THREE.Box3().setFromObject(object);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         const scale = 3 / maxDim;
         
+        // Create a pivot point at the origin
+        pivot = new THREE.Group();
+        scene.add(pivot);
+        
+        // Add object to pivot and offset it so its center is at pivot's origin
+        object.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
         object.scale.set(scale, scale, scale);
-        object.position.sub(center.multiplyScalar(scale));
+        pivot.add(object);
         
-        // Apply material to all meshes
-        object.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            child.material = new THREE.MeshStandardMaterial({
-              color: 0x3b82f6,
-              metalness: 0.3,
-              roughness: 0.5,
-            });
-          }
-        });
-        
-        scene.add(object);
-        loadedObject = object;
+        loadedObject = pivot;
         setLoading(false);
       },
       (xhr) => {
@@ -156,8 +173,8 @@ export default function AssetViewer() {
         }
       },
       (error) => {
-        console.error('Error loading OBJ:', error);
-        setError(`Failed to load "${selectedAsset.name}". Make sure the file exists in public/assets/`);
+        console.error('Error loading GLB:', error);
+        setError(`Failed to load "${selectedAsset.name}". Check server connection and CORS settings.`);
         setLoading(false);
       }
     );
@@ -183,7 +200,7 @@ export default function AssetViewer() {
     };
     window.addEventListener('resize', handleResize);
 
-    // Mouse controls for rotation
+    // Mouse controls for rotation and zoom
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
 
@@ -208,9 +225,17 @@ export default function AssetViewer() {
       isDragging = false;
     };
 
+    const onWheel = (e) => {
+      e.preventDefault();
+      const zoomSpeed = 0.1;
+      camera.position.z += e.deltaY * zoomSpeed * 0.01;
+      camera.position.z = Math.max(2, Math.min(20, camera.position.z));
+    };
+
     renderer.domElement.addEventListener('mousedown', onMouseDown);
     renderer.domElement.addEventListener('mousemove', onMouseMove);
     renderer.domElement.addEventListener('mouseup', onMouseUp);
+    renderer.domElement.addEventListener('wheel', onWheel);
 
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -218,6 +243,7 @@ export default function AssetViewer() {
         renderer.domElement.removeEventListener('mousedown', onMouseDown);
         renderer.domElement.removeEventListener('mousemove', onMouseMove);
         renderer.domElement.removeEventListener('mouseup', onMouseUp);
+        renderer.domElement.removeEventListener('wheel', onWheel);
       }
       if (animationIdRef.current) {
         cancelAnimationFrame(animationIdRef.current);
@@ -229,8 +255,9 @@ export default function AssetViewer() {
   }, [selectedAsset]);
 
   const handleLogin = () => {
-    if (email) {
+    if (email && serverUrl) {
       setIsLoggedIn(true);
+      setError(null);
     }
   };
 
@@ -245,7 +272,7 @@ export default function AssetViewer() {
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Loading file list...</p>
+          <p>Loading file list from server...</p>
         </div>
       </div>
     );
@@ -259,13 +286,8 @@ export default function AssetViewer() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
               <Grid3x3 className="w-8 h-8 text-blue-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">3D Asset Studio</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">BrickGPT Studio</h1>
             <p className="text-gray-600">Sign in to explore your 3D collection</p>
-            {allAssetFiles.length > 0 && (
-              <p className="text-sm text-gray-500 mt-2">
-                {allAssetFiles.length} models available • Showing {SAMPLE_SIZE} at a time
-              </p>
-            )}
           </div>
           
           <div className="space-y-4">
@@ -277,10 +299,26 @@ export default function AssetViewer() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="you@example.com"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Server className="w-4 h-4 inline mr-1" />
+                Server URL
+              </label>
+              <input
+                type="text"
+                value={serverUrl}
+                onChange={(e) => setServerUrl(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="http://localhost:8000"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Server must have /data/dataset.json with your .glb files
+              </p>
             </div>
             
             <button
@@ -301,10 +339,16 @@ export default function AssetViewer() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Grid3x3 className="w-8 h-8 text-blue-500" />
-            <h1 className="text-xl font-bold">3D Asset Studio</h1>
-            <div className="text-xs text-gray-400">
-              {allAssetFiles.length} total • {assets.length} shown
+            <h1 className="text-xl font-bold">BrickGPT Studio</h1>
+            <div className="flex items-center gap-2 text-xs text-gray-400 bg-gray-700 px-3 py-1 rounded-full">
+              <Server className="w-3 h-3" />
+              {serverUrl}
             </div>
+            {allAssetFiles.length > 0 && (
+              <div className="text-xs text-gray-400">
+                {allAssetFiles.length} total • {assets.length} shown
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -315,7 +359,12 @@ export default function AssetViewer() {
               Shuffle
             </button>
             <button
-              onClick={() => setIsLoggedIn(false)}
+              onClick={() => {
+                setIsLoggedIn(false);
+                setAssets([]);
+                setAllAssetFiles([]);
+                setSelectedAsset(null);
+              }}
               className="flex items-center gap-2 px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
             >
               <LogOut className="w-4 h-4" />
@@ -332,6 +381,11 @@ export default function AssetViewer() {
               <Camera className="w-5 h-5 text-blue-500" />
               Current Selection ({assets.length})
             </h2>
+            {error && !selectedAsset && (
+              <div className="bg-red-900 bg-opacity-30 border border-red-700 rounded-lg p-4 mb-4">
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
             <div className="space-y-2">
               {assets.map((asset, idx) => (
                 <button
@@ -343,7 +397,7 @@ export default function AssetViewer() {
                       : 'bg-gray-700 hover:bg-gray-600'
                   }`}
                 >
-                  <div className="font-medium">{asset.name}</div>
+                  <div className="text-xs opacity-75 mt-1 truncate">{asset.category}</div>
                   <div className="text-xs opacity-75 mt-1 truncate">{asset.path}</div>
                 </button>
               ))}
@@ -356,25 +410,30 @@ export default function AssetViewer() {
             <>
               <div className="bg-gray-800 px-6 py-4 border-b border-gray-700">
                 <h2 className="text-xl font-semibold">{selectedAsset.name}</h2>
-                <p className="text-sm text-gray-400 mt-1">Drag to rotate • {selectedAsset.path}</p>
+                <p className="text-sm text-gray-400 mt-1">Drag to rotate • Scroll to zoom • Loaded from remote server</p>
               </div>
               <div className="flex-1 relative">
                 {loading && (
                   <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-10">
                     <div className="text-center">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                      <p>Loading 3D model...</p>
+                      <p>Loading 3D model from server...</p>
                     </div>
                   </div>
                 )}
-                {error && (
+                {error && selectedAsset && (
                   <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-10">
-                    <div className="text-center text-red-400 px-4">
+                    <div className="text-center text-red-400 px-4 max-w-md">
                       <p className="text-lg mb-2">⚠️ Error</p>
-                      <p>{error}</p>
-                      <p className="text-sm mt-4 text-gray-400">
-                        Check the browser console for more details
-                      </p>
+                      <p className="whitespace-pre-line">{error}</p>
+                      <div className="text-sm mt-4 text-gray-400 text-left">
+                        <p className="font-semibold mb-2">Troubleshooting:</p>
+                        <ul className="list-disc list-inside space-y-1">
+                          <li>Check server is running on {serverUrl}</li>
+                          <li>Verify CORS is enabled (use serve.py)</li>
+                          <li>Check browser console (F12) for details</li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -387,13 +446,15 @@ export default function AssetViewer() {
                 <ZoomIn className="w-16 h-16 mx-auto mb-4 opacity-50" />
                 <p className="text-xl">Select an asset to view</p>
                 <p className="text-sm mt-2">Choose from your collection on the left</p>
-                <button
-                  onClick={handleShuffle}
-                  className="mt-6 flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Get New Random Selection
-                </button>
+                {allAssetFiles.length > 0 && (
+                  <button
+                    onClick={handleShuffle}
+                    className="mt-6 flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Get New Random Selection
+                  </button>
+                )}
               </div>
             </div>
           )}
