@@ -17,14 +17,8 @@ cd /data/lego/
 ssh -L 8000:localhost:8000 lego@icl-titan.lan.cmu.edu
 
 
-# Make the web public
-# Install Vercel CLI
-npm install -g vercel
-
-# From your project directory
-cd my-3d-viewer
-vercel
-# Follow prompts, it'll give you a URL like: https://your-app.vercel.app
+# Make the web public on local network
+npm start -- --host 0.0.0.0
 
 
 
