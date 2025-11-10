@@ -1,5 +1,6 @@
 # data-studio
 ```
+npx create-react-app my-3d-viewer
 cd my-3d-viewer
 npm install three lucide-react
 npm uninstall tailwindcss
