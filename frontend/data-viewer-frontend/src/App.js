@@ -6,7 +6,7 @@ import { Camera, Grid3x3, ZoomIn, LogOut, RefreshCw, Server } from 'lucide-react
 export default function AssetViewer() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
-  const [serverUrl, setServerUrl] = useState('http://34.75.53.117:8080');
+  const [serverUrl, setServerUrl] = useState('https://declinational-gaylord-preimportant.ngrok-free.dev');
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [assets, setAssets] = useState([]);
   const [allAssetFiles, setAllAssetFiles] = useState([]);
@@ -40,7 +40,11 @@ export default function AssetViewer() {
       const loadFileList = async () => {
         setLoadingList(true);
         try {
-          const response = await fetch(`${serverUrl}/data/lego/data/dataset.json`);
+          const response = await fetch(`${serverUrl}/data/lego/data/dataset.json`, {
+                                            headers: {
+                                              "ngrok-skip-browser-warning": "true"
+                                            }
+                                          });
           console.log('Fetching dataset.json from', `${serverUrl}/data/lego/data/dataset.json`);
           if (!response.ok) {
             throw new Error('Could not load dataset.json from server');
@@ -139,6 +143,7 @@ export default function AssetViewer() {
 
     // Load GLB file
     const loader = new GLTFLoader();
+    loader.setRequestHeader({ "ngrok-skip-browser-warning": "true" });
     let loadedObject = null;
     let pivot = null;
 
