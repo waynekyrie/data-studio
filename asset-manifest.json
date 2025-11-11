@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/data-studio/static/css/main.02b222d7.css",
+    "main.js": "/data-studio/static/js/main.0b007b24.js",
+    "index.html": "/data-studio/index.html",
+    "main.02b222d7.css.map": "/data-studio/static/css/main.02b222d7.css.map",
+    "main.0b007b24.js.map": "/data-studio/static/js/main.0b007b24.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.02b222d7.css",
+    "static/js/main.0b007b24.js"
+  ]
+}
