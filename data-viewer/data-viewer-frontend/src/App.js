@@ -6,7 +6,7 @@ import { Camera, Grid3x3, ZoomIn, LogOut, RefreshCw, Server } from 'lucide-react
 export default function AssetViewer() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
-  const [serverUrl, setServerUrl] = useState('http://localhost:8000');
+  const [serverUrl, setServerUrl] = useState('http://localhost:8080');
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [assets, setAssets] = useState([]);
   const [allAssetFiles, setAllAssetFiles] = useState([]);
@@ -40,8 +40,8 @@ export default function AssetViewer() {
       const loadFileList = async () => {
         setLoadingList(true);
         try {
-          const response = await fetch(`${serverUrl}/data/dataset.json`);
-          console.log('Fetching dataset.json from', `${serverUrl}/data/dataset.json`);
+          const response = await fetch(`${serverUrl}/data/lego/data/dataset.json`);
+          console.log('Fetching dataset.json from', `${serverUrl}/data/lego/data/dataset.json`);
           if (!response.ok) {
             throw new Error('Could not load dataset.json from server');
           }
@@ -69,7 +69,7 @@ export default function AssetViewer() {
           setLoadingList(false);
         } catch (err) {
           console.error('Error loading file list:', err);
-          setError(`Failed to load file list from ${serverUrl}/data/dataset.json. Make sure server is running and dataset.json exists.`);
+          setError(`Failed to load file list from ${serverUrl}/data/lego/data/dataset.json. Make sure server is running and dataset.json exists.`);
           setLoadingList(false);
         }
       };
@@ -304,22 +304,7 @@ export default function AssetViewer() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Server className="w-4 h-4 inline mr-1" />
-                Server URL
-              </label>
-              <input
-                type="text"
-                value={serverUrl}
-                onChange={(e) => setServerUrl(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="http://localhost:8000"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Server must have /data/dataset.json with your .glb files
-              </p>
-            </div>
+            
             
             <button
               onClick={handleLogin}
