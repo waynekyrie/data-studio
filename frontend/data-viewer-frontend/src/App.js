@@ -6,7 +6,7 @@ import { Camera, Grid3x3, ZoomIn, LogOut, RefreshCw, Server } from 'lucide-react
 export default function AssetViewer() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
-  const [serverUrl, setServerUrl] = useState('http://localhost:8080');
+  const [serverUrl, setServerUrl] = useState('http://34.75.53.117:8080');
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [assets, setAssets] = useState([]);
   const [allAssetFiles, setAllAssetFiles] = useState([]);
