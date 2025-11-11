@@ -28,7 +28,7 @@ export default function AssetViewer() {
     const selected = shuffled.slice(0, Math.min(sampleSize, allFiles.length));
     return selected.map(file => ({
       category: file.category,
-      path: `${serverUrl}/${file.filename[0]}`,
+      path: `${serverUrl}${file.filename[0]}`,
       description: file.filename[1]
     }));
   };
