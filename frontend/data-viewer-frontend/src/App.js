@@ -291,23 +291,28 @@ export default function AssetViewer() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
               <Grid3x3 className="w-8 h-8 text-blue-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">BrickGPT Studio</h1>
-            <p className="text-gray-600">Sign in to explore your 3D collection</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">BrickForge Studio</h1>
+            <p className="text-gray-600">Sign in to explore 3D collection</p>
           </div>
           
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="you@example.com"
-              />
-            </div>
+              <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address
+                  </label>
+                  <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="you@example.com"
+                  />
+                  {/* Footnote-style Disclaimer Added Below */}
+                  <p className="mt-2 text-xs text-gray-500">
+                      We commit to protecting your privacy. Your email address will be used solely for necessary account management and will not be shared or used for unsolicited marketing communications.
+                  </p>
+              </div>
+          </div>
 
             
             
@@ -329,7 +334,7 @@ export default function AssetViewer() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Grid3x3 className="w-8 h-8 text-blue-500" />
-            <h1 className="text-xl font-bold">BrickGPT Studio</h1>
+            <h1 className="text-xl font-bold">BrickForge Studio</h1>
             <div className="flex items-center gap-2 text-xs text-gray-400 bg-gray-700 px-3 py-1 rounded-full">
               <Server className="w-3 h-3" />
               {serverUrl}
