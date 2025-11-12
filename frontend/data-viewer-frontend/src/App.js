@@ -296,23 +296,21 @@ export default function AssetViewer() {
           </div>
           
           <div className="space-y-4">
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address
-                  </label>
-                  <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="you@example.com"
-                  />
-                  {/* Footnote-style Disclaimer Added Below */}
-                  <p className="mt-2 text-xs text-gray-500">
-                      We commit to protecting your privacy. Your email address will be used solely for necessary account management and will not be shared or used for unsolicited marketing communications.
-                  </p>
-              </div>
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="you@example.com"
+              />
+              <p className="mt-2 text-xs text-gray-500">
+                  *We commit to protecting your privacy. Your email address will not be shared or used for unsolicited marketing communications.
+              </p>
+            </div>
 
             
             
@@ -335,10 +333,6 @@ export default function AssetViewer() {
           <div className="flex items-center gap-3">
             <Grid3x3 className="w-8 h-8 text-blue-500" />
             <h1 className="text-xl font-bold">BrickForge Studio</h1>
-            <div className="flex items-center gap-2 text-xs text-gray-400 bg-gray-700 px-3 py-1 rounded-full">
-              <Server className="w-3 h-3" />
-              {serverUrl}
-            </div>
             {allAssetFiles.length > 0 && (
               <div className="text-xs text-gray-400">
                 {allAssetFiles.length} total • {assets.length} shown
@@ -405,7 +399,7 @@ export default function AssetViewer() {
             <>
               <div className="bg-gray-800 px-6 py-4 border-b border-gray-700">
                 <h2 className="text-xl font-semibold">{selectedAsset.name}</h2>
-                <p className="text-sm text-gray-400 mt-1">Drag to rotate • Scroll to zoom • Loaded from remote server</p>
+                <p className="text-sm text-gray-400 mt-1">Drag to rotate • Scroll to zoom</p>
               </div>
               <div className="flex-1 relative">
                 {loading && (
@@ -440,14 +434,14 @@ export default function AssetViewer() {
               <div className="text-center text-gray-400">
                 <ZoomIn className="w-16 h-16 mx-auto mb-4 opacity-50" />
                 <p className="text-xl">Select an asset to view</p>
-                <p className="text-sm mt-2">Choose from your collection on the left</p>
+                <p className="text-sm mt-2">Choose your design on the left</p>
                 {allAssetFiles.length > 0 && (
                   <button
                     onClick={handleShuffle}
                     className="mt-6 flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
                   >
                     <RefreshCw className="w-4 h-4" />
-                    Get New Random Selection
+                    Get New Collection
                   </button>
                 )}
               </div>
