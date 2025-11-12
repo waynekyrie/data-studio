@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { Camera, Grid3x3, ZoomIn, LogOut, RefreshCw, Server } from 'lucide-react';
+import { Helmet } from "react-helmet";
 
 export default function AssetViewer() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -260,10 +261,16 @@ export default function AssetViewer() {
   }, [selectedAsset]);
 
   const handleLogin = () => {
-    if (email && serverUrl) {
-      setIsLoggedIn(true);
-      setError(null);
+    // Simple email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address."); // show error
+      return;
     }
+
+    // Clear error and log in
+    setError(null);
+    setIsLoggedIn(true);
   };
 
   const handleAssetClick = (asset) => {
@@ -277,7 +284,7 @@ export default function AssetViewer() {
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Loading file list from server...</p>
+          <p>Loading ...</p>
         </div>
       </div>
     );
@@ -285,6 +292,10 @@ export default function AssetViewer() {
 
   if (!isLoggedIn) {
     return (
+      <>
+        <Helmet>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        </Helmet>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
           <div className="text-center mb-8">
@@ -292,7 +303,7 @@ export default function AssetViewer() {
               <Grid3x3 className="w-8 h-8 text-blue-600" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">BrickForge Studio</h1>
-            <p className="text-gray-600">Sign in to explore 3D collection</p>
+            <p className="text-gray-600">Sign in to explore BrickForge collection</p>
           </div>
           
           <div className="space-y-4">
@@ -307,6 +318,11 @@ export default function AssetViewer() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="you@example.com"
               />
+              {error && (
+                <p className="mt-2 text-xs text-red-500">
+                  {error}
+                </p>
+              )}
               <p className="mt-2 text-xs text-gray-500">
                   *We commit to protecting your privacy. Your email address will not be shared or used for unsolicited marketing communications.
               </p>
@@ -323,23 +339,28 @@ export default function AssetViewer() {
           </div>
         </div>
       </div>
+      </>      
     );
   }
 
   return (
+    <>
+      <Helmet>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </Helmet>
     <div className="min-h-screen bg-gray-900 text-white">
-      <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
+      <header className="bg-gray-800 border-b border-gray-700 px-4 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Grid3x3 className="w-8 h-8 text-blue-500" />
             <h1 className="text-xl font-bold">BrickForge Studio</h1>
             {allAssetFiles.length > 0 && (
               <div className="text-xs text-gray-400">
-                {allAssetFiles.length} total • {assets.length} shown
+                {allAssetFiles.length} total
               </div>
             )}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={handleShuffle}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
@@ -363,11 +384,12 @@ export default function AssetViewer() {
         </div>
       </header>
 
-      <div className="flex h-[calc(100vh-73px)]">
-        <div className="w-80 bg-gray-800 border-r border-gray-700 overflow-y-auto">
+      <div className="flex h-[calc(100vh-75px)] flex-col-reverse md:flex-row flex-1">
+        
+        {/* Sidebar */}
+        <div className="h-52 md:h-full w-full md:w-80 bg-gray-800 border-gray-700 overflow-x-auto md:overflow-y-auto flex flex-row md:flex-col">
           <div className="p-4">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Camera className="w-5 h-5 text-blue-500" />
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 px-2">
               Current Selection ({assets.length})
             </h2>
             {error && !selectedAsset && (
@@ -375,25 +397,25 @@ export default function AssetViewer() {
                 <p className="text-red-400 text-sm">{error}</p>
               </div>
             )}
-            <div className="space-y-2">
+            <div className="space-x-2 md:space-x-0 space-y-0 md:space-y-2 flex flex-row md:flex-col overflow-x-auto md:overflow-y-auto">
               {assets.map((asset, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleAssetClick(asset)}
-                  className={`w-full text-left p-4 rounded-lg transition-all ${
+                  className={`w-72 md:w-full text-left p-4 rounded-lg transition-all ${
                     selectedAsset?.name === asset.name
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-700 hover:bg-gray-600'
                   }`}
                 >
                   <div className="text-l font-bold  opacity-90 mt-1">{asset.description}</div>
-                  {/* <div className="text-xs opacity-75 mt-1 truncate">{asset.path}</div> */}
                 </button>
               ))}
             </div>
           </div>
         </div>
-
+        
+        {/* Viewer */}
         <div className="flex-1 flex flex-col">
           {selectedAsset ? (
             <>
@@ -406,7 +428,7 @@ export default function AssetViewer() {
                   <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-10">
                     <div className="text-center">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                      <p>Loading 3D model from server...</p>
+                      <p>Loading model ...</p>
                     </div>
                   </div>
                 )}
@@ -426,7 +448,7 @@ export default function AssetViewer() {
                     </div>
                   </div>
                 )}
-                <div ref={mountRef} className="w-full h-full" />
+                <div ref={mountRef} className="w-full md:w-[calc(100vw-320px)] h-[calc(100vh-340px)] md:h-full" />
               </div>
             </>
           ) : (
@@ -450,5 +472,6 @@ export default function AssetViewer() {
         </div>
       </div>
     </div>
+    </>
   );
 }
