@@ -46,12 +46,10 @@ export default function AssetViewer() {
                                               "ngrok-skip-browser-warning": "true"
                                             }
                                           });
-          console.log('Fetching dataset.json from', `${serverUrl}/data/lego/data/dataset.json`);
           if (!response.ok) {
             throw new Error('Could not load dataset.json from server');
           }
           const data = await response.json();
-          console.log('Loaded file list:', data);
           
           if (!data || Object.keys(data).length === 0) {
           throw new Error('dataset.json is empty or invalid');
@@ -67,14 +65,12 @@ export default function AssetViewer() {
             filename,
           }));
         });
-          console.log("All files:", allFiles);
           
           setAllAssetFiles(allFiles);
-          console.log("Fetched: ", allAssetFiles);
           setLoadingList(false);
         } catch (err) {
           console.error('Error loading file list:', err);
-          setError(`Failed to load file list from ${serverUrl}/data/lego/data/dataset.json. Make sure server is running and dataset.json exists.`);
+          setError(`Failed to load file list. Make sure server is running and dataset.json exists.`);
           setLoadingList(false);
         }
       };
@@ -440,8 +436,6 @@ export default function AssetViewer() {
                       <div className="text-sm mt-4 text-gray-400 text-left">
                         <p className="font-semibold mb-2">Troubleshooting:</p>
                         <ul className="list-disc list-inside space-y-1">
-                          <li>Check server is running on {serverUrl}</li>
-                          <li>Verify CORS is enabled (use serve.py)</li>
                           <li>Check browser console (F12) for details</li>
                         </ul>
                       </div>

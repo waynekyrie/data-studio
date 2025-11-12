@@ -14,11 +14,11 @@ const SSH_CONFIG = {
   password: process.env.SSH_PASS, // ⚠️ use env var in real deployment
 };
 
-app.get(/^\/data\/lego\/(.*)$/, async (req, res) => {
+app.get(/^\/lego\/(.*)$/, async (req, res) => {
 
   const remotePath = `/data/lego/${req.params[0]}`;
 
-  console.log(`Fetching ${remotePath} via SSH...`);
+  // console.log(`Fetching ${remotePath} via SSH...`);
 
   const conn = new Client();
   let sftp;
