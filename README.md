@@ -1,9 +1,5 @@
 # data-studio
 ```
-# Backend
-cd backend
-node server.js
-
 # Frontend
 cd frontend
 npx create-react-app data-viewer-frontend
