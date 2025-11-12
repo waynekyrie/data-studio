@@ -41,7 +41,7 @@ export default function AssetViewer() {
       const loadFileList = async () => {
         setLoadingList(true);
         try {
-          const response = await fetch(`${serverUrl}/data/lego/data/dataset.json`, {
+          const response = await fetch(`${serverUrl}/lego/data/dataset.json`, {
                                             headers: {
                                               "ngrok-skip-browser-warning": "true"
                                             }
