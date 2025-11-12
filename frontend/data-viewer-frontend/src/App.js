@@ -43,7 +43,8 @@ export default function AssetViewer() {
         try {
           const response = await fetch(`${serverUrl}/dataset.json`, {
                                             headers: {
-                                              "ngrok-skip-browser-warning": "true"
+                                              "ngrok-skip-browser-warning": "true",
+                                              "Email":email
                                             }
                                           });
           if (!response.ok) {
@@ -140,7 +141,7 @@ export default function AssetViewer() {
 
     // Load GLB file
     const loader = new GLTFLoader();
-    loader.setRequestHeader({ "ngrok-skip-browser-warning": "true" });
+    loader.setRequestHeader({ "ngrok-skip-browser-warning": "true" , "Email": email});
     let loadedObject = null;
     let pivot = null;
 
