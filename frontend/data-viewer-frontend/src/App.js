@@ -20,17 +20,43 @@ export default function AssetViewer() {
   const cameraRef = useRef(null);
   const animationIdRef = useRef(null);
 
+  // 🔹 Added filter states
+  const [filterCategory, setFilterCategory] = useState('All');
+  const [filterSize, setFilterSize] = useState('All');
+  const [filterStability, setFilterStability] = useState('All');
+
   // Number of assets to show per session (change this number as needed)
   const SAMPLE_SIZE = 20;
 
   // Function to randomly sample assets
   const sampleAssets = (allFiles, sampleSize) => {
-    const shuffled = [...allFiles].sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, Math.min(sampleSize, allFiles.length));
+    // 🔹 Filter based on user selections
+    const filtered = allFiles.filter((file) => {
+      const matchCategory = filterCategory === "All" || file.category === filterCategory;
+      const matchSize = filterSize === "All" || 
+                        (filterSize === "Small" && file.filename[2] <= 50) ||
+                        (filterSize === "Medium" && file.filename[2] > 50 && file.filename[2] <= 200) ||
+                        (filterSize === "Large" && file.filename[2] > 200);
+      const matchStability =   filterStability === "All" ||
+                              (filterStability === "Stable" && file.filename[3] === 1) ||
+                              (filterStability === "Unstable" && file.filename[3] === 0);
+      return matchCategory && matchSize && matchStability;
+    });
+
+    if (filtered.length === 0) {
+      setError("No available assets."); // show error
+      return [];
+    }
+    setError(null);
+    
+    const shuffled = [...filtered].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, Math.min(sampleSize, filtered.length));
     return selected.map(file => ({
       category: file.category,
       path: `${serverUrl}${file.filename[0]}`,
-      description: file.filename[1]
+      description: file.filename[1],
+      num_components: file.filename[2],
+      stability: file.filename[3]
     }));
   };
 
@@ -257,6 +283,18 @@ export default function AssetViewer() {
     };
   }, [selectedAsset]);
 
+  useEffect(() => {
+    handleShuffle();
+  }, [filterStability]);
+
+  useEffect(() => {
+    handleShuffle();
+  }, [filterSize]);
+
+  useEffect(() => {
+    handleShuffle();
+  }, [filterCategory]);
+
   const handleLogin = () => {
     // Simple email validation regex
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -384,7 +422,43 @@ export default function AssetViewer() {
       <div className="flex h-[calc(100vh-75px)] flex-col-reverse md:flex-row flex-1">
         
         {/* Sidebar */}
-        <div className="h-52 md:h-full w-full md:w-80 bg-gray-800 border-gray-700 overflow-x-auto md:overflow-y-auto flex flex-row md:flex-col">
+        <div className="h-52 md:h-full w-full md:w-[calc(480px)] bg-gray-800 border-gray-700 overflow-x-auto md:overflow-y-auto flex flex-row md:flex-col">
+          
+          {/* 🔹 Filters Section */}
+            <div className="flex flex-wrap gap-2 py-1">
+              <select
+                value={filterCategory}
+                onChange={(e) => {setFilterCategory(e.target.value);}}
+                className="bg-gray-700 border border-gray-600 rounded-lg px-2 py-1 text-sm w-36"
+              >
+                <option value="All">All Categories</option>
+                {[...new Set(allAssetFiles.map(f => f.category))].map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+
+              <select
+                value={filterSize}
+                onChange={(e) => {setFilterSize(e.target.value);}}
+                className="bg-gray-700 border border-gray-600 rounded-lg px-2 py-1 text-sm w-36"
+              >
+                <option value="All">All Sizes</option>
+                <option value="Small">Small</option>
+                <option value="Medium">Medium</option>
+                <option value="Large">Large</option>
+              </select>
+
+              <select
+                value={filterStability}
+                onChange={(e) => {setFilterStability(e.target.value); }}
+                className="bg-gray-700 border border-gray-600 rounded-lg px-2 py-1 text-sm w-36"
+              >
+                <option value="All">Any Buildability</option>
+                <option value="Stable">Buildable</option>
+                <option value="Unstable">Unstable</option>
+              </select>
+              </div>
+
           <div className="p-4">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 px-2">
               Current Selection ({assets.length})
@@ -443,15 +517,14 @@ export default function AssetViewer() {
                     </div>
                   </div>
                 )}
-                <div ref={mountRef} className="w-full md:w-[calc(100vw-320px)] h-[calc(100vh-340px)] md:h-full" />
+                <div ref={mountRef} className="w-full md:w-[calc(100vw-480px)] h-[calc(100vh-340px)] md:h-full" />
               </div>
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center text-gray-400">
                 <ZoomIn className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-xl">Select an asset to view</p>
-                <p className="text-sm mt-2">Choose your design on the left</p>
+                <p className="text-xl">Select a design to view</p>
                 {allAssetFiles.length > 0 && (
                   <button
                     onClick={handleShuffle}
